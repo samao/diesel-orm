@@ -4,5 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-diesel = { version = "2.2.11", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "serde_json"] }
+anyhow = "1.0.98"
+diesel = { version = "2.2.12", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "serde_json"] }
 dotenvy = "0.15.7"
+serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.46.1", features = ["macros", "rt-multi-thread"] }
