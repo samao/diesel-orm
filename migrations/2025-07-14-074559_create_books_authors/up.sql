@@ -15,9 +15,9 @@ CREATE TABLE
     );
 
 -- 为外键列创建索引（提高关联查询性能）
--- CREATE INDEX idx_books_authors_book_id ON books_authors (book_id);
+CREATE INDEX idx_books_authors_book_id ON books_authors (book_id);
 
--- CREATE INDEX idx_books_authors_author_id ON books_authors (author_id);
+CREATE INDEX idx_books_authors_author_id ON books_authors (author_id);
 
 -- 添加唯一约束（如果未包含在主键中）
--- CREATE UNIQUE INDEX idx_unique_book_author ON books_authors (book_id, author_id);
+CREATE UNIQUE INDEX idx_unique_book_author ON books_authors (book_id, author_id);
