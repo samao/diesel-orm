@@ -1,3 +1,4 @@
+use diesel::SqliteConnection;
 use diesel_demo::schema::rooms::hot;
 
 fn main() -> anyhow::Result<()> {
@@ -10,12 +11,6 @@ fn main() -> anyhow::Result<()> {
     use serde::Serialize;
 
     let conn = &mut establish_connection();
-
-    // let room_with_cate = rooms::table
-    //     .inner_join(cates::table)
-    //     .filter(cates::id.eq(8))
-    //     .select((Room::as_select(), Cate::as_select()))
-    //     .load::<(Room, Cate)>(conn)?;
 
     #[derive(Serialize, Debug)]
     struct CateWithRooms {
@@ -41,5 +36,31 @@ fn main() -> anyhow::Result<()> {
         .map(|(rooms, cate)| CateWithRooms { cate, rooms })
         .collect::<Vec<CateWithRooms>>();
     println!("randcate:{:?}", serde_json::to_string(&rooms_per_cate)?);
+
+    dilevery_hot(conn, 1, 2, 10)?;
     Ok(())
+}
+
+fn dilevery_hot(conn: &mut SqliteConnection, from: i32, to: i32, amount: u8) -> anyhow::Result<()> {
+    use diesel::prelude::*;
+    use diesel_demo::models::Room;
+    use diesel_demo::schema::rooms::dsl::*;
+
+    conn.transaction(|conn| {
+        let from_room = diesel::update(rooms)
+            .filter(id.eq(from))
+            .set(hot.eq(hot - amount as i32))
+            .returning(Room::as_returning())
+            .get_result::<Room>(conn)?;
+        println!("{:?}", from_room);
+
+        let to_room = diesel::update(rooms)
+            .filter(id.eq(to))
+            .set(hot.eq(hot + amount as i32))
+            .returning(Room::as_returning())
+            .get_result::<Room>(conn)?;
+        println!("{:?}", to_room);
+
+        Ok(())
+    })
 }
