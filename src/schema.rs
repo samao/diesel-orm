@@ -22,6 +22,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    cates (id) {
+        id -> Integer,
+        icon_url -> Text,
+        cate_name -> Text,
+        live_total -> Integer,
+    }
+}
+
+diesel::table! {
     pages (id) {
         id -> Integer,
         page_number -> Integer,
@@ -46,9 +55,10 @@ diesel::table! {
         is_live -> Bool,
         img_url -> Text,
         hot -> Integer,
-        user_id -> Integer,
-        created_at -> Nullable<Timestamp>,
-        updated_at -> Nullable<Timestamp>,
+        user_id -> Nullable<Integer>,
+        cate_id -> Nullable<Integer>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -72,13 +82,14 @@ diesel::table! {
         id -> Integer,
         user_name -> Text,
         avatar -> Text,
-        created_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
     }
 }
 
 diesel::joinable!(books_authors -> authors (author_id));
 diesel::joinable!(books_authors -> books (book_id));
 diesel::joinable!(pages -> books (book_id));
+diesel::joinable!(rooms -> cates (cate_id));
 diesel::joinable!(rooms -> users (user_id));
 diesel::joinable!(rooms_tags -> rooms (room_id));
 diesel::joinable!(rooms_tags -> tags (tag_id));
@@ -87,6 +98,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     authors,
     books,
     books_authors,
+    cates,
     pages,
     posts,
     rooms,

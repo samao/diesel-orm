@@ -7,7 +7,15 @@ CREATE TABLE
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         user_name TEXT NOT NULL CHECK (length (user_name) BETWEEN 3 AND 8),
         avatar TEXT NOT NULL DEFAULT '//dummyimg/90/90',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+CREATE TABLE
+    IF NOT EXISTS cates (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        icon_url TEXT NOT NULL DEFAULT '/imgs/game/game_15735501549253_logo.png',
+        cate_name TEXT NOT NULL CHECK(length(cate_name) BETWEEN 2 AND 12),
+        live_total INTEGER NOT NULL DEFAULT 0
     );
 
 -- 创建 rooms 表
@@ -18,10 +26,12 @@ CREATE TABLE
         is_live BOOLEAN NOT NULL DEFAULT 0 CHECK (is_live IN (0, 1)),
         img_url TEXT NOT NULL DEFAULT '//dummyimg/120/90',
         hot INTEGER NOT NULL DEFAULT 0 CHECK (hot >= 0),
-        user_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        user_id INTEGER,
+        cate_id INTEGER,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (cate_id) REFERENCES cates (id) ON DELETE CASCADE
     );
 
 -- 创建 tags 表
@@ -50,11 +60,12 @@ CREATE INDEX IF NOT EXISTS idx_rooms_tags_room ON rooms_tags (room_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_tags_tag ON rooms_tags (tag_id);
 
 -- 创建更新触发器
-CREATE TRIGGER update_room_timestamp
-AFTER UPDATE ON rooms
-FOR EACH ROW
-BEGIN
-    UPDATE roooms 
-    SET updated_at = CURRENT_TIMESTAMP 
-    WHERE id = NEW.id;
+CREATE TRIGGER update_room_timestamp AFTER
+UPDATE ON rooms FOR EACH ROW BEGIN
+UPDATE rooms
+SET
+    updated_at = CURRENT_TIMESTAMP
+WHERE
+    id = NEW.id;
+
 END;

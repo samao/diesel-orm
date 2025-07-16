@@ -3,7 +3,7 @@ use diesel::{prelude::*, sqlite::Sqlite};
 use serde::Serialize;
 
 // ------------------
-use crate::schema::{rooms, rooms_tags, tags, users};
+use crate::schema::{cates, rooms, rooms_tags, tags, users};
 
 #[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Serialize, Clone)]
 #[diesel(table_name = tags)]
@@ -20,8 +20,18 @@ pub struct User {
     pub avatar: String,
 }
 
+#[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Serialize, Clone)]
+#[diesel(table_name = cates)]
+pub struct Cate {
+    pub id: i32,
+    pub icon_url: String,
+    pub cate_name: String,
+    pub live_total: i32,
+}
+
 #[derive(Queryable, Identifiable, Associations, Selectable, Debug, PartialEq, Serialize, Clone)]
 #[diesel(belongs_to(User))]
+#[diesel(belongs_to(Cate))]
 #[diesel(table_name = rooms)]
 pub struct Room {
     pub id: i32,
@@ -30,9 +40,21 @@ pub struct Room {
     pub img_url: String,
     pub hot: i32,
     pub user_id: Option<i32>,
+    pub cate_id: Option<i32>,
 }
 
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[derive(AsChangeset)]
+#[diesel(table_name = rooms)]
+pub struct RoomUpdate {
+    pub title: Option<String>,
+    pub is_live: Option<bool>,
+    pub img_url: Option<String>,
+    pub hot: Option<i32>,
+    pub user_id: Option<i32>,
+    pub cate_id: Option<i32>,
+}
+
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug, PartialEq, Clone)]
 #[diesel(belongs_to(Room))]
 #[diesel(belongs_to(Tag))]
 #[diesel(table_name = rooms_tags)]
