@@ -1,50 +1,12 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    authors (id) {
-        id -> Integer,
-        name -> Text,
-    }
-}
-
-diesel::table! {
-    books (id) {
-        id -> Integer,
-        title -> Text,
-    }
-}
-
-diesel::table! {
-    books_authors (book_id, author_id) {
-        book_id -> Integer,
-        author_id -> Integer,
-    }
-}
-
-diesel::table! {
     cates (id) {
         id -> Integer,
         icon_url -> Text,
+        img_url -> Text,
         cate_name -> Text,
         live_total -> Integer,
-    }
-}
-
-diesel::table! {
-    pages (id) {
-        id -> Integer,
-        page_number -> Integer,
-        content -> Text,
-        book_id -> Integer,
-    }
-}
-
-diesel::table! {
-    posts (id) {
-        id -> Integer,
-        title -> Text,
-        body -> Text,
-        published -> Bool,
     }
 }
 
@@ -55,8 +17,8 @@ diesel::table! {
         is_live -> Bool,
         img_url -> Text,
         hot -> Integer,
-        user_id -> Nullable<Integer>,
-        cate_id -> Nullable<Integer>,
+        user_id -> Integer,
+        cate_id -> Integer,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
@@ -86,21 +48,13 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(books_authors -> authors (author_id));
-diesel::joinable!(books_authors -> books (book_id));
-diesel::joinable!(pages -> books (book_id));
 diesel::joinable!(rooms -> cates (cate_id));
 diesel::joinable!(rooms -> users (user_id));
 diesel::joinable!(rooms_tags -> rooms (room_id));
 diesel::joinable!(rooms_tags -> tags (tag_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    authors,
-    books,
-    books_authors,
     cates,
-    pages,
-    posts,
     rooms,
     rooms_tags,
     tags,

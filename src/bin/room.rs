@@ -10,7 +10,7 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
-    Create {
+    C {
         #[arg(short, long, help = "房间标题")]
         title: String,
         #[arg(short, long, action = SetTrue, help = "是否开播标记")]
@@ -20,11 +20,11 @@ enum Command {
         #[arg(short = 's', long, help = "当前热度")]
         hot: i32,
         #[arg(short, long, help = "主播id")]
-        uid: Option<i32>,
+        uid: i32,
         #[arg(short, long, help = "分类id")]
-        cateid: Option<i32>,
+        cateid: i32,
     },
-    Update {
+    U {
         #[arg(long, short, help = "房间id")]
         id: i32,
         #[arg(short, long, help = "房间标题")]
@@ -40,11 +40,11 @@ enum Command {
         #[arg(short, long, help = "分类id")]
         cateid: Option<i32>,
     },
-    Delete {
+    D {
         #[arg(short, long, help = "删除指定的房间")]
         id: i32,
     },
-    Read {
+    R {
         #[arg(long, short, help = "查询的房价id， 默认列出全部房间")]
         id: Option<i32>,
     },
@@ -56,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
 
     let args = Args::parse();
     match args.cmd {
-        Some(Command::Create {
+        Some(Command::C {
             title,
             live: is_live,
             image: img_url,
@@ -66,10 +66,10 @@ async fn main() -> anyhow::Result<()> {
         }) => {
             create_room(&mut conn, title, is_live, img_url, hot, user_id, cateid)?;
         }
-        Some(Command::Read { id }) => {
+        Some(Command::R { id }) => {
             read_room(&mut conn, id)?;
         }
-        Some(Command::Update {
+        Some(Command::U {
             id,
             title,
             live,
@@ -80,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
         }) => {
             update_room(&mut conn, id, title, live, image, hot, uid, cateid)?;
         }
-        Some(Command::Delete { id }) => {
+        Some(Command::D { id }) => {
             delete_room(&mut conn, id)?;
         }
         _ => {
@@ -102,18 +102,29 @@ fn update_room(
     cateid: Option<i32>,
 ) -> anyhow::Result<()> {
     use diesel::prelude::*;
-    use diesel_demo::models::{Room, RoomUpdate};
-    use diesel_demo::schema::rooms::dsl::*;
-    let room_update = RoomUpdate {
-        title: room_name.clone(),
-        is_live: live,
-        img_url: image.clone(),
-        hot: hot_val,
-        user_id: uid,
-        cate_id: cateid,
-    };
+    use diesel_demo::models::Room;
+    use diesel_demo::schema::rooms::{self, dsl::*};
+
+    #[derive(AsChangeset)]
+    #[diesel(table_name = rooms)]
+    pub struct RoomUpdate {
+        pub title: Option<String>,
+        pub is_live: Option<bool>,
+        pub img_url: Option<String>,
+        pub hot: Option<i32>,
+        pub user_id: Option<i32>,
+        pub cate_id: Option<i32>,
+    }
+
     let room = diesel::update(rooms.filter(id.eq(rid)))
-        .set(&room_update)
+        .set(&RoomUpdate {
+            title: room_name.clone(),
+            is_live: live,
+            img_url: image.clone(),
+            hot: hot_val,
+            user_id: uid,
+            cate_id: cateid,
+        })
         .returning(Room::as_returning())
         .get_result(conn)?;
     println!("update room: {:?}", room);
@@ -151,8 +162,8 @@ fn create_room(
     live: bool,
     img: String,
     hot_val: i32,
-    user: Option<i32>,
-    cateid: Option<i32>,
+    user: i32,
+    cateid: i32,
 ) -> anyhow::Result<()> {
     use diesel::prelude::*;
     use diesel_demo::models::Room;

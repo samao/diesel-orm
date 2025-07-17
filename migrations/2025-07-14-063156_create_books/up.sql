@@ -1,6 +1,0 @@
--- Your SQL goes here
-CREATE TABLE
-    books (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        title VARCHAR NOT NULL
-    )
