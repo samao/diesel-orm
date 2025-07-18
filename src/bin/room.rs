@@ -1,6 +1,8 @@
 use clap::{ArgAction::SetTrue, Parser, Subcommand, arg};
-use diesel::SqliteConnection;
-use diesel_demo::establish_connection;
+use diesel_demo::{
+    establish_connection,
+    rooms::{create, delete, read, update},
+};
 
 #[derive(Parser)]
 struct Args {
@@ -64,10 +66,10 @@ async fn main() -> anyhow::Result<()> {
             uid: user_id,
             cateid,
         }) => {
-            create_room(&mut conn, title, is_live, img_url, hot, user_id, cateid)?;
+            create(&mut conn, title, is_live, img_url, hot, user_id, cateid)?;
         }
         Some(Command::R { id }) => {
-            read_room(&mut conn, id)?;
+            read(&mut conn, id)?;
         }
         Some(Command::U {
             id,
@@ -78,110 +80,15 @@ async fn main() -> anyhow::Result<()> {
             uid,
             cateid,
         }) => {
-            update_room(&mut conn, id, title, live, image, hot, uid, cateid)?;
+            update(&mut conn, id, title, live, image, hot, uid, cateid)?;
         }
         Some(Command::D { id }) => {
-            delete_room(&mut conn, id)?;
+            delete(&mut conn, id)?;
         }
         _ => {
             println!("INVALID");
         }
     }
-
-    Ok(())
-}
-
-fn update_room(
-    conn: &mut SqliteConnection,
-    rid: i32,
-    room_name: Option<String>,
-    live: Option<bool>,
-    image: Option<String>,
-    hot_val: Option<i32>,
-    uid: Option<i32>,
-    cateid: Option<i32>,
-) -> anyhow::Result<()> {
-    use diesel::prelude::*;
-    use diesel_demo::models::Room;
-    use diesel_demo::schema::rooms::{self, dsl::*};
-
-    #[derive(AsChangeset)]
-    #[diesel(table_name = rooms)]
-    pub struct RoomUpdate {
-        pub title: Option<String>,
-        pub is_live: Option<bool>,
-        pub img_url: Option<String>,
-        pub hot: Option<i32>,
-        pub user_id: Option<i32>,
-        pub cate_id: Option<i32>,
-    }
-
-    let room = diesel::update(rooms.filter(id.eq(rid)))
-        .set(&RoomUpdate {
-            title: room_name.clone(),
-            is_live: live,
-            img_url: image.clone(),
-            hot: hot_val,
-            user_id: uid,
-            cate_id: cateid,
-        })
-        .returning(Room::as_returning())
-        .get_result(conn)?;
-    println!("update room: {:?}", room);
-    Ok(())
-}
-
-fn delete_room(conn: &mut SqliteConnection, rid: i32) -> anyhow::Result<()> {
-    use diesel::prelude::*;
-    use diesel_demo::models::Room;
-    use diesel_demo::schema::rooms::dsl::*;
-    let dels = diesel::delete(rooms)
-        .filter(id.eq(rid))
-        .returning(Room::as_returning())
-        .get_result(conn)?;
-    println!("delete room: {:?}", dels);
-    Ok(())
-}
-
-fn read_room(conn: &mut SqliteConnection, rid: Option<i32>) -> anyhow::Result<()> {
-    use diesel::prelude::*;
-    use diesel_demo::models::Room;
-    use diesel_demo::schema::rooms::dsl::*;
-    let mut query = rooms.into_boxed();
-    if let Some(rid) = rid {
-        query = query.filter(id.eq(rid));
-    }
-    let room = query.select(Room::as_returning()).get_results(conn)?;
-    println!("read room: {:?}", room);
-    Ok(())
-}
-
-fn create_room(
-    conn: &mut SqliteConnection,
-    name: String,
-    live: bool,
-    img: String,
-    hot_val: i32,
-    user: i32,
-    cateid: i32,
-) -> anyhow::Result<()> {
-    use diesel::prelude::*;
-    use diesel_demo::models::Room;
-    use diesel_demo::schema::rooms::dsl::*;
-
-    let room = diesel::insert_into(rooms)
-        .values((
-            title.eq(name),
-            is_live.eq(live),
-            img_url.eq(img),
-            hot.eq(hot_val),
-            user_id.eq(user),
-            cate_id.eq(cateid),
-        ))
-        .returning(Room::as_returning())
-        .get_result(conn)?;
-
-    println!("创建新房间: {:?}", room);
 
     Ok(())
 }

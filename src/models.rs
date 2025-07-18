@@ -29,7 +29,19 @@ pub struct Cate {
     pub live_total: i32,
 }
 
-#[derive(Queryable, Identifiable, Associations, Selectable, QueryableByName, Debug, PartialEq, Serialize, Clone, Hash, Eq)]
+#[derive(
+    Queryable,
+    Identifiable,
+    Associations,
+    Selectable,
+    QueryableByName,
+    Debug,
+    PartialEq,
+    Serialize,
+    Clone,
+    Hash,
+    Eq,
+)]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(Cate))]
 #[diesel(table_name = rooms)]

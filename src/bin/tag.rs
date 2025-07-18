@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand, arg};
-use tracing::info;
+use diesel_demo::tags::{create, delete, read, update};
 
 #[derive(Parser)]
 struct Args {
@@ -31,44 +31,21 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    use diesel::prelude::*;
     use diesel_demo::establish_connection;
-    use diesel_demo::models::Tag;
-    use diesel_demo::schema::tags::dsl::*;
-
     let args = Args::parse();
     let conn = &mut establish_connection();
     match args.cmd {
-        Some(Command::C { title: input_tag }) => {
-            let tag = diesel::insert_into(tags)
-                .values(title.eq(input_tag))
-                .returning(Tag::as_returning())
-                .get_result(conn)?;
-            info!("insert a Tag: {:?}", tag);
+        Some(Command::C { title }) => {
+            create(conn, title)?;
         }
-        Some(Command::U {
-            id: input_id,
-            title: input_tag,
-        }) => {
-            let tag = diesel::update(tags.filter(id.eq(input_id)))
-                .set(title.eq(input_tag))
-                .returning(Tag::as_returning())
-                .get_result(conn)?;
-            info!("update a Tag: {:?}", tag);
+        Some(Command::U { id, title }) => {
+            update(conn, id, title)?;
         }
-        Some(Command::R { id: input_id }) => {
-            let mut query = tags.into_boxed();
-            if let Some(input_id) = input_id {
-                query = query.filter(id.eq(input_id));
-            }
-            let tag_list: Vec<Tag> = query.select(Tag::as_select()).order_by(id.asc()).get_results(conn)?;
-            info!("query tag list: {:?}", tag_list);
+        Some(Command::R { id }) => {
+            read(conn, id)?;
         }
-        Some(Command::D { id: input_id }) => {
-            let tag_id = diesel::delete(tags.filter(id.eq(input_id)))
-                .returning(Tag::as_returning())
-                .get_result(conn)?;
-            info!("remove tag: {:?}", tag_id);
+        Some(Command::D { id }) => {
+            delete(conn, id)?;
         }
         _ => panic!("Invalid command"),
     }
